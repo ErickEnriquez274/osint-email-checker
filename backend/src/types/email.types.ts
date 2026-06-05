@@ -35,3 +35,18 @@ export interface CheckResult {
   gravatar: GravatarResponse | null;
   checkedAt: string;
 }
+export interface PhoneMetadata {
+  valid: boolean;
+  country: string | undefined;
+  countryCallingCode: string;
+  nationalNumber: string;
+  numberType: string | undefined;
+  formatted: string;
+}
+
+export interface PhoneCheckResult {
+  phone: string;
+  metadata: PhoneMetadata;
+  breaches: any | null;
+  checkedAt: string;
+}
