@@ -1,11 +1,15 @@
 import { useState } from "react";
 import axios from "axios";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./AuthContext";
+import ProtectedRoute from "./ProtectedRoute";
+import Login from "./Login";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 type Tab = "email" | "phone";
 
-function App() {
+function Home() {
   const [tab, setTab] = useState<Tab>("email");
 
   // Email state
@@ -172,6 +176,26 @@ function App() {
         </div>
       )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
