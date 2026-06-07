@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
 import Login from "./Login";
+import { RiskBadge } from "./components/RiskBadge";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -12,13 +13,11 @@ type Tab = "email" | "phone";
 function Home() {
   const [tab, setTab] = useState<Tab>("email");
 
-  // Email state
   const [email, setEmail] = useState("");
   const [emailResult, setEmailResult] = useState<any>(null);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
 
-  // Phone state
   const [phone, setPhone] = useState("");
   const [phoneResult, setPhoneResult] = useState<any>(null);
   const [phoneLoading, setPhoneLoading] = useState(false);
@@ -56,7 +55,7 @@ function Home() {
 
   return (
     <div style={{ maxWidth: 700, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
-      <h1>🔍 OSINT Checker</h1>
+      <h1>👻 GhostNet</h1>
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: "2px solid #ddd" }}>
@@ -87,7 +86,7 @@ function Home() {
           <div style={{ display: "flex", gap: 8 }}>
             <input
               type="email"
-              placeholder="correo@ejemplo.com"
+              placeholder="ghostnet@ejemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && searchEmail()}
@@ -103,6 +102,8 @@ function Home() {
           {emailResult && (
             <div style={{ marginTop: 24 }}>
               <h2>Resultados para: {emailResult.email}</h2>
+
+              {emailResult.risk && <RiskBadge risk={emailResult.risk} />}
 
               <h3>🔓 Filtraciones</h3>
               {emailResult.breaches
@@ -158,6 +159,8 @@ function Home() {
           {phoneResult && (
             <div style={{ marginTop: 24 }}>
               <h2>Resultados para: {phoneResult.phone}</h2>
+
+              {phoneResult.risk && <RiskBadge risk={phoneResult.risk} />}
 
               <h3>📋 Metadata del número</h3>
               <ul>

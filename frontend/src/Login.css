@@ -110,12 +110,6 @@
   margin: 0 auto 1rem;
   color: var(--accent);
   filter: drop-shadow(0 0 8px var(--accent));
-  animation: rotate-slow 12s linear infinite;
-}
-
-@keyframes rotate-slow {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
 }
 
 .login-title {

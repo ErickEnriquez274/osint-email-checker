@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { getPhoneMetadata, checkPhoneBreaches } from "../services/phoneService";
-
+import { calculateRiskScore } from "../services/riskScore";
 export const checkPhone = async (req: Request, res: Response) => {
   const { phone } = req.body;
 
@@ -24,11 +24,16 @@ export const checkPhone = async (req: Request, res: Response) => {
 
   try {
     const breaches = await checkPhoneBreaches(phone);
-
+    const risk = calculateRiskScore({
+  breaches,
+  numberType: metadata.numberType,
+  country: metadata.country,
+});
     res.json({
       phone,
       metadata,
       breaches,
+      risk,
       checkedAt: new Date().toISOString(),
     });
   } catch (error: any) {
