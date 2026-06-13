@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./AuthContext";
+import { AuthProvider, useAuth } from "./AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
 import Login from "./Login";
 import { RiskBadge } from "./components/RiskBadge";
@@ -11,6 +11,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 type Tab = "email" | "phone";
 
 function Home() {
+  const { logout } = useAuth();
   const [tab, setTab] = useState<Tab>("email");
 
   const [email, setEmail] = useState("");
@@ -55,31 +56,67 @@ function Home() {
 
   return (
     <div style={{ maxWidth: 700, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
-      <h1>👻 GhostNet</h1>
 
+      {/* Header */}
+{/* Botón cerrar sesión - esquina fija */}
+<div style={{ position: "fixed", top: 30, right: 190, zIndex: 100 }}>
+  <button
+    onClick={logout}
+    style={{
+      padding: "15px 16px",
+      fontSize: 12,
+      cursor: "pointer",
+      background: "linear-gradient(135deg, #0a1628, #0d2137)",
+      border: "1px solid #00e5ff55",
+      borderRadius: 6,
+      color: "#00e5ff",
+      fontFamily: "monospace",
+      letterSpacing: "0.15em",
+      boxShadow: "0 0 12px rgba(0,229,255,0.15), inset 0 0 12px rgba(0,229,255,0.05)",
+      transition: "all 0.2s",
+    }}
+    onMouseEnter={e => {
+      (e.target as HTMLButtonElement).style.boxShadow = "0 0 20px rgba(0,229,255,0.4), inset 0 0 12px rgba(0,229,255,0.1)";
+      (e.target as HTMLButtonElement).style.borderColor = "#00e5ff";
+    }}
+    onMouseLeave={e => {
+      (e.target as HTMLButtonElement).style.boxShadow = "0 0 12px rgba(0,229,255,0.15), inset 0 0 12px rgba(0,229,255,0.05)";
+      (e.target as HTMLButtonElement).style.borderColor = "#00e5ff55";
+    }}
+  >
+    ⏻ CERRAR SESIÓN
+  </button>
+</div>
+
+{/* Título */}
+<h1 style={{ margin: "0 0 24px 0", textAlign: "left", fontFamily: "monospace", letterSpacing: "0.1em" }}>
+  👻GHOST<span style={{ color: "#00e5ff", textShadow: "0 0 12px #00e5ff" }}>NET</span>
+</h1>
+  
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: "2px solid #ddd" }}>
-        {(["email", "phone"] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              padding: "10px 24px",
-              border: "none",
-              borderBottom: tab === t ? "2px solid #0070f3" : "2px solid transparent",
-              background: "none",
-              cursor: "pointer",
-              fontWeight: tab === t ? "bold" : "normal",
-              color: tab === t ? "#0070f3" : "#666",
-              fontSize: 16,
-              marginBottom: -2,
-            }}
-          >
-            {t === "email" ? "📧 Correo" : "📱 Teléfono"}
-          </button>
-        ))}
-      </div>
-
+<div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: "1px solid #1e2a35" }}>
+  {(["email", "phone"] as Tab[]).map((t) => (
+    <button
+      key={t}
+      onClick={() => setTab(t)}
+      style={{
+        padding: "10px 24px",
+        border: "none",
+        borderBottom: tab === t ? "2px solid #00e5ff" : "2px solid transparent",
+        background: "none",
+        cursor: "pointer",
+        fontWeight: tab === t ? "bold" : "normal",
+        color: tab === t ? "#00e5ff" : "#4a6070",
+        fontSize: 14,
+        fontFamily: "monospace",
+        letterSpacing: "0.1em",
+        marginBottom: -1,
+      }}
+    >
+      {t === "email" ? "📧 CORREO" : "📱 TELÉFONO"}
+    </button>
+  ))}
+</div>
       {/* Email Tab */}
       {tab === "email" && (
         <div>

@@ -76,7 +76,7 @@ export default function Login() {
           <div className="login-icon">
             <img src="/logo.png" alt="GhostNet" style={{ width: 60, height: 60, objectFit: 'contain' }} />
           </div>
-          <h1 className="login-title">GHOST<span>NET</span></h1>
+          <h1 className="login-title">Ghost<span>Net</span></h1>
           <p className="login-subtitle">Digital Intelligence Platform</p>
         </div>
 
