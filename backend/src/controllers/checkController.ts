@@ -3,6 +3,7 @@ import { checkXON } from "../services/xonService";
 import { checkEmailRep } from "../services/emailRepService";
 import { checkGravatar } from "../services/gravatarService";
 import { calculateRiskScore } from "../services/riskScore";
+import { checkHolehe } from "../services/holeheService";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -15,10 +16,11 @@ export const checkEmail = async (req: Request, res: Response) => {
   }
 
   try {
-    const [breaches, reputation, gravatar] = await Promise.allSettled([
+    const [breaches, reputation, gravatar, holehe] = await Promise.allSettled([
       checkXON(email),
       checkEmailRep(email),
       checkGravatar(email),
+      checkHolehe(email),
     ]);
 
     const breachesValue = breaches.status === "fulfilled" ? breaches.value : null;
@@ -32,9 +34,10 @@ export const checkEmail = async (req: Request, res: Response) => {
 
     res.json({
       email,
-      breaches: breachesValue,
-      reputation: reputationValue,
-      gravatar: gravatarValue,
+      breaches: breaches.status === "fulfilled" ? breaches.value : null,
+      reputation: reputation.status === "fulfilled" ? reputation.value : null,
+      gravatar: gravatar.status === "fulfilled" ? gravatar.value : null,
+      sites: holehe.status === "fulfilled" ? holehe.value : [],
       risk,
       checkedAt: new Date().toISOString(),
     });

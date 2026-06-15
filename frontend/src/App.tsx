@@ -19,6 +19,8 @@ function Home() {
   const [emailResult, setEmailResult] = useState<any>(null);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [sites, setSites] = useState<any[]>([]);
+  const [sitesLoading, setSitesLoading] = useState(false);
 
   const [phone, setPhone] = useState("");
   const [phoneResult, setPhoneResult] = useState<any>(null);
@@ -30,13 +32,41 @@ function Home() {
     setEmailLoading(true);
     setEmailError(null);
     setEmailResult(null);
+    setSites([]);
+    setSitesLoading(true);
+
     try {
       const res = await axios.post(`${API_URL}/api/check`, { email });
       setEmailResult(res.data);
     } catch (err: any) {
       setEmailError(err.response?.data?.error || "Error al conectar con el servidor");
+      setSitesLoading(false);
+      return;
     } finally {
       setEmailLoading(false);
+    }
+
+    try {
+      const eventSource = new EventSource(
+        `http://localhost:5000/check?email=${encodeURIComponent(email)}`
+      );
+
+      eventSource.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        if (data.done) {
+          eventSource.close();
+          setSitesLoading(false);
+          return;
+        }
+        setSites(prev => [...prev, data]);
+      };
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        setSitesLoading(false);
+      };
+    } catch {
+      setSitesLoading(false);
     }
   };
 
@@ -59,7 +89,7 @@ function Home() {
     <>
       <SpaceBackground />
 
-      {/* Botón cerrar sesión - esquina fija */}
+      {/* Botón cerrar sesión */}
       <div style={{ position: "fixed", top: 16, right: 24, zIndex: 100 }}>
         <button
           onClick={logout}
@@ -173,10 +203,10 @@ function Home() {
               <p style={{ color: "#ff4d6d", fontFamily: "monospace", fontSize: 13 }}>⚠️ {emailError}</p>
             )}
 
-            {emailResult && (
+            {(emailResult || sites.length > 0) && (
               <div style={{ marginTop: 24 }}>
                 <h2 style={{ color: "#00e5ff", fontSize: 16, letterSpacing: "0.1em" }}>
-                  RESULTADOS: {emailResult.email}
+                  RESULTADOS: {emailResult?.email || email}
                 </h2>
 
                 {emailResult.risk && <RiskBadge risk={emailResult.risk} />}
@@ -205,6 +235,64 @@ function Home() {
                     <p style={{ color: "#c8d8e0" }}>{emailResult.gravatar.entry[0].displayName || "Sin nombre público"}</p>
                   </div>
                 ) : <p style={{ color: "#4a6070" }}>Sin perfil en Gravatar</p>}
+
+                <h3 style={{ color: "#4a6070", fontSize: 13, letterSpacing: "0.15em" }}>
+                  🌐 SITIOS REGISTRADOS ({sites.length})
+                  {sitesLoading && (
+                    <span style={{ color: "#00e5ff", marginLeft: 8, fontSize: 11 }}>
+                      escaneando...
+                    </span>
+                  )}
+                </h3>
+                {sites.length > 0 ? (
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+                    gap: 12,
+                    marginTop: 8,
+                    marginBottom: 24,
+                  }}>
+                    {sites.map((s: any) => (
+                      <a
+                        key={s.domain}
+                        href={`https://${s.domain}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: "none" }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            background: "#0d1117",
+                            border: "1px solid #1e2a35",
+                            borderRadius: 6,
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            transition: "border-color 0.2s",
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.borderColor = "#00e5ff55")}
+                          onMouseLeave={e => (e.currentTarget.style.borderColor = "#1e2a35")}
+                        >
+                          <img
+                            src={`https://www.google.com/s2/favicons?domain=${s.domain}&sz=32`}
+                            alt={s.site}
+                            style={{ width: 20, height: 20 }}
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                          <span style={{ color: "#c8d8e0", fontSize: 12, fontFamily: "monospace" }}>
+                            {s.site}
+                          </span>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                ) : sitesLoading ? (
+                  <p style={{ color: "#4a6070", fontSize: 12 }}>🔍 Escaneando 121 sitios...</p>
+                ) : (
+                  <p style={{ color: "#4a6070" }}>Sin sitios encontrados</p>
+                )}
               </div>
             )}
           </div>
