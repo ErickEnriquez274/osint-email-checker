@@ -84,7 +84,7 @@ function Home() {
 
     try {
       const eventSource = new EventSource(
-        `http://localhost:5000/check?email=${encodeURIComponent(email)}`
+        `${import.meta.env.VITE_HOLEHE_URL || 'http://localhost:5000'}/check?email=${encodeURIComponent(email)}`
       );
       eventSource.onmessage = (e) => {
         const data = JSON.parse(e.data);
