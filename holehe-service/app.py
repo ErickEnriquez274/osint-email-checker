@@ -1,99 +1,74 @@
-from flask import Flask, jsonify, request, Response
+from flask import Flask, jsonify, Response
+from flask_cors import CORS
 import asyncio
 import httpx
 import json
+import threading
+import queue as Queue
 from holehe.core import get_functions, import_submodules
 import holehe.modules
 
 app = Flask(__name__)
+CORS(app)
 
-@app.route('/check', methods=['GET'])
+@app.route('/check')
 def check_email():
+    from flask import request
     email = request.args.get('email')
-    
+
     if not email:
         return jsonify({'error': 'Email requerido'}), 400
 
-    def generate():
-        async def run():
-            async with httpx.AsyncClient(timeout=15.0) as client:
+    q = Queue.Queue()
+
+    def run_holehe():
+        async def producer():
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 submodules = import_submodules(holehe.modules)
                 modules = get_functions(submodules)
-                
-                for module in modules:
-                    try:
-                        data = []
-                        await module(email, client, data)
-                        for result in data:
-                            if result.get('exists'):
-                                domain = result.get('domain') or result.get('name', '')
-                                site = {
-                                    'site': result.get('name', domain),
-                                    'domain': domain,
-                                    'exists': True
-                                }
-                                yield site
-                    except Exception:
-                        pass
 
-        async def collect():
-            async for site in run():
-                yield site
+                # Corre 10 módulos en paralelo a la vez
+                semaphore = asyncio.Semaphore(10)
+
+                async def check_module(module):
+                    async with semaphore:
+                        try:
+                            data = []
+                            await module(email, client, data)
+                            for result in data:
+                                if result.get('exists'):
+                                    domain = result.get('domain') or result.get('name', '')
+                                    q.put({
+                                        'site': result.get('name', domain),
+                                        'domain': domain,
+                                        'exists': True
+                                    })
+                        except Exception:
+                            pass
+
+                tasks = [check_module(m) for m in modules]
+                await asyncio.gather(*tasks)
+            q.put(None)
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        loop.run_until_complete(producer())
 
-        async def stream():
-            async for site in collect():
-                yield f"data: {json.dumps(site)}\n\n"
-            yield "data: {\"done\": true}\n\n"
+    thread = threading.Thread(target=run_holehe)
+    thread.start()
 
-        async def run_stream():
-            async for chunk in stream():
-                yield chunk
-
-        queue = asyncio.Queue()
-
-        async def producer():
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                submodules = import_submodules(holehe.modules)
-                modules = get_functions(submodules)
-                for module in modules:
-                    try:
-                        data = []
-                        await module(email, client, data)
-                        for result in data:
-                            if result.get('exists'):
-                                domain = result.get('domain') or result.get('name', '')
-                                await queue.put({
-                                    'site': result.get('name', domain),
-                                    'domain': domain,
-                                    'exists': True
-                                })
-                    except Exception:
-                        pass
-            await queue.put(None)  # señal de fin
-
-        import threading
-
-        def run_producer():
-            loop2 = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop2)
-            loop2.run_until_complete(producer())
-
-        thread = threading.Thread(target=run_producer)
-        thread.start()
-
+    def generate():
         import time
         while True:
             try:
-                item = queue.get_nowait()
+                item = q.get(timeout=30)
                 if item is None:
                     yield f"data: {{\"done\": true}}\n\n"
                     break
                 yield f"data: {json.dumps(item)}\n\n"
             except Exception:
-                time.sleep(0.1)
+                yield f"data: {{\"done\": true}}\n\n"
+                break
 
     return Response(
         generate(),

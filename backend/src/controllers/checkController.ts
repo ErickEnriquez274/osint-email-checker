@@ -16,11 +16,10 @@ export const checkEmail = async (req: Request, res: Response) => {
   }
 
   try {
-    const [breaches, reputation, gravatar, holehe] = await Promise.allSettled([
+    const [breaches, reputation, gravatar] = await Promise.allSettled([
       checkXON(email),
       checkEmailRep(email),
       checkGravatar(email),
-      checkHolehe(email),
     ]);
 
     const breachesValue = breaches.status === "fulfilled" ? breaches.value : null;
@@ -37,7 +36,6 @@ export const checkEmail = async (req: Request, res: Response) => {
       breaches: breaches.status === "fulfilled" ? breaches.value : null,
       reputation: reputation.status === "fulfilled" ? reputation.value : null,
       gravatar: gravatar.status === "fulfilled" ? gravatar.value : null,
-      sites: holehe.status === "fulfilled" ? holehe.value : [],
       risk,
       checkedAt: new Date().toISOString(),
     });

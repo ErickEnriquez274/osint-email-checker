@@ -305,3 +305,52 @@
   letter-spacing: 0.1em;
   animation: fade-up 0.5s 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* GhostNet ajustes finales */
+.login-root,
+.login-card,
+.login-form,
+.login-btn,
+.login-input {
+  font-family: "Garet", "Montserrat", "Segoe UI", Arial, sans-serif;
+}
+
+.notranslate,
+[translate="no"] {
+  translate: no;
+}
+
+.login-icon {
+  width: 78px;
+  height: 78px;
+  margin: 0 auto 1rem;
+  filter: none;
+}
+
+.login-logo-circle {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(0, 229, 255, 0.55);
+  box-shadow:
+    0 0 0 5px rgba(0, 229, 255, 0.07),
+    0 0 26px rgba(0, 229, 255, 0.55);
+}
+
+.login-title {
+  letter-spacing: -0.03em;
+  text-transform: none;
+  font-size: 2.3rem;
+  font-weight: 900;
+}
+
+.login-ghost {
+  color: #f4f7fa;
+  text-shadow: 0 0 8px rgba(255,255,255,.55), 0 0 18px rgba(255,255,255,.22);
+}
+
+.login-net {
+  color: #00e5ff;
+  text-shadow: 0 0 10px #00e5ff, 0 0 24px #00e5ff, 0 0 56px rgba(0, 229, 255, 0.82);
+}

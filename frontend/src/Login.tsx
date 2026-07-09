@@ -72,11 +72,11 @@ export default function Login() {
       <div className="login-scanline" />
 
       <div className="login-card">
-        <div className="login-header">
+        <div className="login-header" translate="no">
           <div className="login-icon">
-            <img src="/logo.png" alt="GhostNet" style={{ width: 60, height: 60, objectFit: 'contain' }} />
+            <img className="login-logo-circle notranslate" src="/logo.png" alt="GhostNet" translate="no" />
           </div>
-          <h1 className="login-title">Ghost<span>Net</span></h1>
+          <h1 className="login-title notranslate" translate="no"><span className="login-ghost">Ghost</span><span className="login-net">Net</span></h1>
           <p className="login-subtitle">Digital Intelligence Platform</p>
         </div>
 

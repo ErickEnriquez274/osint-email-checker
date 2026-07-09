@@ -1,9 +1,7 @@
 import { Router } from "express";
-import { checkEmail } from "../controllers/checkController";
 import { recalculateRisk } from "../controllers/riskScoreController";
 
 const router = Router();
-router.post("/", checkEmail);
 router.post("/riskscore", recalculateRisk);
 
 export default router;
