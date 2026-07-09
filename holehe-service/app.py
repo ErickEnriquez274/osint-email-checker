@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, jsonify, Response
 from flask_cors import CORS
 import asyncio
@@ -81,4 +83,5 @@ def check_email():
     )
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=False, threaded=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False, threaded=True)
+    import os
