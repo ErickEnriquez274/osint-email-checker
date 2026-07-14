@@ -12,20 +12,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 type Tab = "email" | "phone" | "dork";
 type View = "dashboard" | "analizar" | "resultados" | "sitios";
 
-function GhostNetBrand({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className={compact ? "brand-lockup compact" : "brand-lockup"} translate="no">
-      <img src="/logo.png" alt="GhostNet" className="brand-logo logo-circle" translate="no" />
-      <div className="brand-text-wrap" translate="no">
-        <h1 className="brand-title notranslate" translate="no">
-          <span className="ghost-word">Ghost</span><span className="net-word">Net</span>
-        </h1>
-        {!compact && <p className="brand-subtitle">DIGITAL INTELLIGENCE PLATFORM</p>}
-      </div>
-    </div>
-  );
-}
-
 function Home() {
   const { logout } = useAuth();
   const [tab, setTab] = useState<Tab>("email");
@@ -137,14 +123,14 @@ function Home() {
       setDorkResults(res.data.results || []);
       setDorkTotal(res.data.total || 0);
     } catch (err: any) {
-      setDorkError(err.response?.data?.error || "Error al ejecutar el dork");
+      setDorkError(err.response?.data?.error || "Error al ejecutar la búsqueda avanzada");
     } finally { setDorkLoading(false); }
   };
 
   const visibleDorkResults = dorkShowAll ? dorkResults : dorkResults.slice(0, 5);
 
 const navItems: { id: View; label: string; icon: string }[] = [
-  { id: "dashboard", label: "Dashboard", icon: "⌂" },
+  { id: "dashboard", label: "Inicio", icon: "⌂" },
   { id: "analizar", label: "Analizar", icon: "⌕" },
   { id: "resultados", label: "Resultados", icon: "◴" },
   { id: "sitios", label: "Sitios", icon: "◎" },
@@ -155,15 +141,17 @@ const navItems: { id: View; label: string; icon: string }[] = [
     <section className="scanner-card">
       <div className="panel-heading">
         <span>Centro de análisis</span>
-        <small>Dorking · Email · Teléfono</small>
+        <small>Búsqueda avanzada · Correo · Teléfono</small>
       </div>
       <div className="tabs">
         {(["email", "phone", "dork"] as Tab[]).map((t) => (
           <button key={t} onClick={() => setTab(t)} className={tab === t ? "tab active" : "tab"}>
-            {t === "email" ? "📧 CORREO" : t === "phone" ? "📱 TELÉFONO" : "🔎 DORKING"}
+            {t === "email" ? "📧 CORREO" : t === "phone" ? "📱 TELÉFONO" : "🔎 BÚSQUEDA WEB"}
           </button>
         ))}
       </div>
+      <div className="analysis-workbench">
+        <div className="analysis-form-zone">
       {tab === "email" && (
         <div className="scan-section">
           <div className="input-row">
@@ -288,6 +276,44 @@ const navItems: { id: View; label: string; icon: string }[] = [
           )}
         </div>
       )}
+        </div>
+
+        <aside className="analysis-guide" aria-label="Guía del análisis">
+          <div className="guide-orbit" aria-hidden="true">
+            <span>{tab === "email" ? "@" : tab === "phone" ? "#" : "⌕"}</span>
+          </div>
+          <span className="guide-kicker">{tab === "dork" ? "CONSULTA ESPECIALIZADA" : "ANÁLISIS DE IDENTIDAD"}</span>
+          <h3>{tab === "email" ? "¿Qué puede revelar un correo?" : tab === "phone" ? "¿Qué puede revelar un teléfono?" : "Construye una búsqueda precisa"}</h3>
+          <p>
+            {tab === "email"
+              ? "GhostNet cruza señales públicas para ayudarte a entender la exposición asociada a una dirección de correo."
+              : tab === "phone"
+                ? "Obtén contexto técnico del número y revisa si existen señales de riesgo asociadas."
+                : "Combina operadores para encontrar información pública específica y reducir resultados irrelevantes."}
+          </p>
+
+          <div className="guide-findings">
+            {(tab === "email"
+              ? ["Cuentas y servicios vinculados", "Reputación y señales de riesgo", "Perfiles públicos disponibles"]
+              : tab === "phone"
+                ? ["País y formato internacional", "Tipo y validez del número", "Posibles señales de exposición"]
+                : ["Documentos indexados", "Rutas y paneles públicos", "Resultados por ubicación"]
+            ).map((item) => <div key={item}><span>✓</span>{item}</div>)}
+          </div>
+
+          <div className="guide-example">
+            <small>EJEMPLO RÁPIDO</small>
+            {tab === "email" && <button onClick={() => setEmail("nombre.apellido@dominio.com")}><code>nombre.apellido@dominio.com</code><span>Usar →</span></button>}
+            {tab === "phone" && <button onClick={() => setPhone("+525512345678")}><code>+52 55 1234 5678</code><span>Usar →</span></button>}
+            {tab === "dork" && <button onClick={() => setDorkQuery('site:ejemplo.com filetype:pdf')}><code>site:ejemplo.com filetype:pdf</code><span>Usar →</span></button>}
+          </div>
+
+          <div className="responsible-note">
+            <span>i</span>
+            <p><strong>Uso responsable</strong>Consulta únicamente información propia o aquella para la que tengas autorización.</p>
+          </div>
+        </aside>
+      </div>
     </section>
   );
 
@@ -416,98 +442,114 @@ const navItems: { id: View; label: string; icon: string }[] = [
       <aside className="ghostnet-sidebar">
         <div className="sidebar-brand" translate="no">
           <img className="logo-circle" src="/logo.png" alt="GhostNet" translate="no" />
-          <h2 className="notranslate" translate="no">GHOSTNET</h2>
-          <p>Email Security Checker</p>
+          <div>
+            <h2 className="notranslate" translate="no"><span>Ghost</span><b>Net</b></h2>
+            <p>CENTRO OSINT</p>
+          </div>
         </div>
+        <div className="sidebar-section-label">ESPACIO DE TRABAJO</div>
         <nav className="sidebar-nav" aria-label="Navegación principal">
           {navItems.map(item => (
             <button key={item.id} type="button"
+              data-tooltip={`Ir a ${item.label}`}
               className={view === item.id ? "active" : ""}
               onClick={() => goTo(item.id)}>
               <span>{item.icon}</span> {item.label}
             </button>
           ))}
         </nav>
-        <div className="sidebar-user">
-          <div className="user-orb">●</div>
+        <div className="sidebar-system-card">
+          <span className="system-pulse" />
           <div>
-            <strong>Usuario</strong>
-            <span>En línea</span>
+            <strong>Sistema operativo</strong>
+            <small>Servicios de análisis disponibles</small>
+          </div>
+        </div>
+        <div className="sidebar-user">
+          <div className="user-orb">GN</div>
+          <div>
+            <strong>Operador GhostNet</strong>
+            <span>Sesión segura</span>
           </div>
         </div>
       </aside>
 
       <section className="ghostnet-main">
-        <button className="logout-button" onClick={logout}>⏻ CERRAR SESIÓN</button>
+        <header className="workspace-header">
+          <div>
+            <span className="workspace-kicker">INTELIGENCIA DIGITAL / {view.toUpperCase()}</span>
+            <h1>{view === "dashboard" ? "Centro de operaciones" : view === "analizar" ? "Nueva investigación" : view === "resultados" ? "Evidencia recopilada" : "Presencia digital"}</h1>
+          </div>
+          <div className="workspace-actions">
+            <div className="live-status"><span /> RED SEGURA</div>
+            <button className="logout-button" data-tooltip="Cerrar la sesión actual" onClick={logout}>SALIR</button>
+          </div>
+        </header>
 
-{view === "dashboard" && (
+        {view === "dashboard" && (
           <>
             <header className="hero-panel">
-              <GhostNetBrand />
-              <p className="hero-copy">
-                Analiza correos y teléfonos para identificar filtraciones, reputación y presencia en sitios registrados.
-              </p>
-              <div className="status-row">
-                <span>🛡️ Protegido</span>
-                <span>OSINT activo</span>
-                <span>Monitoreo web</span>
+              <div className="hero-content">
+                <span className="eyebrow">PLATAFORMA DE INTELIGENCIA GHOSTNET</span>
+                <h2>Descubre lo que la red sabe.</h2>
+                <p className="hero-copy">
+                  Investiga identidades digitales, detecta exposición de datos y convierte señales dispersas en evidencia útil.
+                </p>
+                <div className="hero-actions">
+                  <button className="primary-action" data-tooltip="Comenzar una nueva búsqueda" onClick={() => { setTab("email"); goTo("analizar"); }}>Iniciar análisis <span>→</span></button>
+                  <button className="secondary-action" data-tooltip="Abrir la evidencia de esta sesión" onClick={() => goTo("resultados")}>Ver resultados</button>
+                </div>
+              </div>
+              <div className="hero-radar" aria-hidden="true">
+                <div className="radar-ring ring-one" />
+                <div className="radar-ring ring-two" />
+                <div className="radar-cross horizontal" />
+                <div className="radar-cross vertical" />
+                <div className="radar-sweep" />
+                <div className="radar-core" />
+                <span className="radar-label">ESCANEANDO</span>
               </div>
             </header>
 
             <div className="dashboard-grid">
-              <div className="dashboard-card"><span>📧</span><strong>{emailResult ? 1 : 0}</strong><p>Correos analizados</p></div>
-              <div className="dashboard-card"><span>🌐</span><strong>{sites.length}</strong><p>Sitios encontrados</p></div>
-              <div className="dashboard-card"><span>📱</span><strong>{phoneResult ? 1 : 0}</strong><p>Teléfonos consultados</p></div>
-              <div className="dashboard-card"><span>🛡️</span><strong>{hasResults ? "Activo" : "Listo"}</strong><p>Estado del sistema</p></div>
+              <div className="dashboard-card"><div className="metric-icon">@</div><p>Correos analizados</p><strong>{emailResult ? 1 : 0}</strong><small>En esta sesión</small></div>
+              <div className="dashboard-card"><div className="metric-icon">◎</div><p>Perfiles vinculados</p><strong>{sites.length}</strong><small>Coincidencias verificadas</small></div>
+              <div className="dashboard-card"><div className="metric-icon">#</div><p>Teléfonos consultados</p><strong>{phoneResult ? 1 : 0}</strong><small>En esta sesión</small></div>
+              <div className="dashboard-card status-metric"><div className="metric-icon">✓</div><p>Estado del sistema</p><strong>{hasResults ? "Activo" : "Listo"}</strong><small><span className="status-dot" /> Todos los servicios</small></div>
             </div>
 
-            <section className="scanner-card">
+            <div className="dashboard-columns">
+            <section className="scanner-card intelligence-card">
               <div className="panel-heading">
-                <span>💡 ¿Sabías que...?</span>
-                <small>Huella digital</small>
+                <div><span>Inteligencia preventiva</span><p>Claves para proteger tu identidad digital</p></div>
+                <small>GUÍA RÁPIDA</small>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
+              <div className="intel-list">
                 {[
-                  { icon: "🔍", title: "Tu huella digital es más grande de lo que crees", text: "Cada vez que te registras en un sitio web, comentas en un foro o usas tu correo, dejas un rastro. Con el tiempo, esa información puede aparecer en bases de datos públicas o filtraciones." },
-                  { icon: "🛡️", title: "Las filtraciones son más comunes de lo esperado", text: "Miles de millones de credenciales han sido expuestas. Sitios como LinkedIn, Adobe y Yahoo han sufrido brechas que comprometieron datos de millones de usuarios." },
-                  { icon: "🔑", title: "Un correo comprometido puede dar acceso a todo", text: "Si usas el mismo correo y contraseña en varios sitios, una sola filtración puede comprometer todas tus cuentas. Usa contraseñas únicas y un gestor de contraseñas." },
-                  { icon: "🌐", title: "Google sabe más de ti de lo que imaginas", text: "A través de técnicas de Google Dorking, investigadores pueden encontrar tu información en sitios públicos, documentos indexados o bases de datos expuestas accidentalmente." },
+                  { icon: "01", title: "Tu huella crece con cada registro", text: "Correos, alias y perfiles forman conexiones que pueden revelar más información de la esperada." },
+                  { icon: "02", title: "Una filtración puede abrir varias puertas", text: "Reutilizar credenciales convierte una sola brecha en un riesgo para todas tus cuentas." },
+                  { icon: "03", title: "La información pública también es evidencia", text: "Documentos indexados y perfiles olvidados pueden exponer datos sensibles sin que lo notes." },
                 ].map((tip, i) => (
-                  <div key={i} style={{
-                    display: "flex", gap: 16, alignItems: "flex-start",
-                    padding: "14px 16px", borderRadius: 10,
-                    background: "rgba(0, 229, 255, 0.05)",
-                    border: "1px solid rgba(0, 229, 255, 0.12)",
-                  }}>
-                    <span style={{ fontSize: 24, flexShrink: 0 }}>{tip.icon}</span>
+                  <div className="intel-item" key={i}>
+                    <span>{tip.icon}</span>
                     <div>
-                      <strong style={{ color: "#d7e9f4", fontSize: 14, display: "block", marginBottom: 4 }}>{tip.title}</strong>
-                      <p style={{ color: "#8fb2c9", fontSize: 13, margin: 0, lineHeight: 1.6 }}>{tip.text}</p>
+                      <strong>{tip.title}</strong>
+                      <p>{tip.text}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </section>
 
-            <section className="security-note" style={{ marginTop: 20 }}>
-              <div className="security-icon">🚀</div>
-              <article>
-                <h3>¿Listo para analizar tu huella digital?</h3>
-                <p>Ve a <strong>Analizar</strong> para comenzar. Puedes buscar por correo o número de teléfono.</p>
-                <div className="security-grid">
-                  <button onClick={() => goTo("analizar")} style={{
-                    background: "rgba(0, 229, 255, 0.12)", border: "1px solid rgba(0, 229, 255, 0.3)",
-                    borderRadius: 8, color: "#00e5ff", padding: "10px 16px",
-                    cursor: "pointer", fontWeight: 700, fontSize: 13,
-                  }}>📧 Analizar correo</button>
-                  <button onClick={() => goTo("analizar")} style={{
-                    background: "rgba(0, 229, 255, 0.12)", border: "1px solid rgba(0, 229, 255, 0.3)",
-                    borderRadius: 8, color: "#00e5ff", padding: "10px 16px",
-                    cursor: "pointer", fontWeight: 700, fontSize: 13,
-                  }}>🔎 Hacer Dorking</button>
-                </div>
-              </article>
+            <section className="security-note quick-actions-card">
+              <div className="panel-heading">
+                <div><span>Acciones rápidas</span><p>Elige un punto de partida</p></div>
+              </div>
+              <button data-tooltip="Buscar exposición asociada a una dirección de correo" onClick={() => { setTab("email"); goTo("analizar"); }}><span>@</span><div><strong>Rastrear correo</strong><small>Exposición y cuentas vinculadas</small></div><b>→</b></button>
+              <button data-tooltip="Consultar origen y riesgo de un número telefónico" onClick={() => { setTab("phone"); goTo("analizar"); }}><span>#</span><div><strong>Investigar teléfono</strong><small>Origen, formato y filtraciones</small></div><b>→</b></button>
+              <button data-tooltip="Ejecutar una búsqueda avanzada en fuentes públicas" onClick={() => { setTab("dork"); goTo("analizar"); }}><span>⌕</span><div><strong>Ejecutar búsqueda avanzada</strong><small>Consultas especializadas en la web</small></div><b>→</b></button>
             </section>
+            </div>
           </>
         )}
 

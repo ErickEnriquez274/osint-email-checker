@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import './Login.css';
 
-type Mode = 'login' | 'register';
+type Mode = 'login' | 'register' | 'forgot' | 'verify';
 
 export default function Login() {
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [code, setCode] = useState('');
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -17,22 +18,48 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const clearMessages = () => { setError(''); setSuccess(''); };
+
+  const changeMode = (next: Mode) => {
+    setMode(next);
+    clearMessages();
+    setPassword('');
+    setConfirmPassword('');
+    setCode('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    clearMessages();
+
+    if (mode === 'forgot') {
+      setLoading(true);
+      window.setTimeout(() => {
+        setLoading(false);
+        setMode('verify');
+        setSuccess('Solicitud preparada. El envío real se activará al conectar el servicio de correo.');
+      }, 650);
+      return;
+    }
+
+    if (mode === 'verify') {
+      if (code.length !== 6) return setError('Ingresa el código de 6 dígitos.');
+      if (password.length < 8) return setError('La contraseña debe tener al menos 8 caracteres.');
+      if (password !== confirmPassword) return setError('Las contraseñas no coinciden.');
+      setError('El cambio de contraseña requiere conectar el endpoint de recuperación del backend.');
+      return;
+    }
 
     if (mode === 'register' && password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
+      setError('Las contraseñas no coinciden.');
       return;
     }
     if (password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres');
+      setError('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
 
     setLoading(true);
-
     try {
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
       const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
@@ -40,175 +67,131 @@ export default function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Ocurrió un error');
-        return;
-      }
+      if (!res.ok) return setError(data.error || 'Ocurrió un error.');
 
       if (mode === 'register') {
-        setSuccess('Cuenta creada. Ahora inicia sesión.');
+        setSuccess('Cuenta creada. Ya puedes iniciar sesión.');
         setMode('login');
-        setEmail('');
         setPassword('');
         setConfirmPassword('');
         return;
       }
-
       login(data.token, remember);
       navigate('/');
     } catch {
-      setError('No se pudo conectar con el servidor');
+      setError('No se pudo conectar con el servidor.');
     } finally {
       setLoading(false);
     }
   };
 
+  const isRecovery = mode === 'forgot' || mode === 'verify';
+
   return (
-    <div className="login-root">
+    <main className="login-root">
+      <div className="login-ambient login-ambient-one" />
+      <div className="login-ambient login-ambient-two" />
       <div className="login-grid" />
-      <div className="login-scanline" />
+      <div className="login-signal-field" aria-hidden="true"><i /><i /><i /><i /></div>
+      <div className="login-background-ghost" aria-hidden="true">
+        <img src="/ghost-runner.png" alt="" />
+      </div>
+      <div className="login-right-radar" aria-hidden="true">
+        <span className="radar-ring ring-one" /><span className="radar-ring ring-two" /><span className="radar-ring ring-three" />
+        <span className="radar-sweep" /><span className="radar-point point-one" /><span className="radar-point point-two" />
+        <small>GN // SIGNAL 07</small>
+      </div>
 
-      <div className="login-card">
-        <div className="login-header" translate="no">
-          <div className="login-icon">
-            <img className="login-logo-circle notranslate" src="/logo.png" alt="GhostNet" translate="no" />
+      <section className="login-layout">
+        <div className="login-intro">
+          <div className="login-eyebrow"><span /> INTELIGENCIA DIGITAL</div>
+          <h2>Investiga tu huella.<br /><strong>Protege tu identidad.</strong></h2>
+          <p>Una plataforma OSINT para descubrir exposición digital, analizar señales de riesgo y tomar decisiones con contexto.</p>
+          <div className="login-features">
+            <article><span>01</span><div><b>¿Qué es OSINT?</b><p>Inteligencia obtenida de fuentes públicas para conocer tu exposición digital.</p></div></article>
+            <article><span>02</span><div><b>Detecta filtraciones</b><p>Comprueba si un correo aparece relacionado con brechas o servicios en línea.</p></div></article>
+            <article><span>03</span><div><b>Reduce tus riesgos</b><p>Interpreta las señales encontradas y toma medidas para proteger tus cuentas.</p></div></article>
           </div>
-          <h1 className="login-title notranslate" translate="no"><span className="login-ghost">Ghost</span><span className="login-net">Net</span></h1>
-          <p className="login-subtitle">Digital Intelligence Platform</p>
         </div>
 
-        {/* Mode tabs */}
-        <div style={{ display: 'flex', marginBottom: 24, borderBottom: '1px solid #1a3a3a' }}>
-          {(['login', 'register'] as Mode[]).map(m => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => { setMode(m); setError(''); setSuccess(''); }}
-              style={{
-                flex: 1,
-                padding: '10px',
-                background: 'none',
-                border: 'none',
-                borderBottom: mode === m ? '2px solid #00e5ff' : '2px solid transparent',
-                color: mode === m ? '#00e5ff' : '#556',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                letterSpacing: '0.1em',
-                fontSize: 13,
-                marginBottom: -1,
-              }}
-            >
-              {m === 'login' ? 'ACCEDER' : 'REGISTRARSE'}
-            </button>
-          ))}
-        </div>
-
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="login-field">
-            <label className="login-label" htmlFor="email">CORREO</label>
-            <div className="login-input-wrap">
-              <input
-                id="email"
-                className="login-input"
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                autoComplete="email"
-                required
-                placeholder="operador@ghostnet.io"
-              />
-              <span className="login-input-line" />
-            </div>
+        <div className="login-card">
+          <svg className="login-ghost-trail" aria-hidden="true">
+            <rect pathLength="100" />
+          </svg>
+          <div className="login-ghost-runner" aria-hidden="true">
+            <img src="/ghost-runner.png" alt="" />
           </div>
-
-          <div className="login-field">
-            <label className="login-label" htmlFor="password">CONTRASEÑA</label>
-            <div className="login-input-wrap">
-              <input
-                id="password"
-                className="login-input"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                required
-                placeholder="••••••••"
-              />
-              <span className="login-input-line" />
+          <header className="login-header" translate="no">
+            <img className="login-logo-circle notranslate" src="/logo.png" alt="GhostNet" />
+            <div>
+              <h1 className="login-title notranslate"><span className="login-ghost">Ghost</span><span className="login-net">Net</span></h1>
+              <p className="login-subtitle">Digital Intelligence Platform</p>
             </div>
-          </div>
+          </header>
 
-          {mode === 'register' && (
-            <div className="login-field">
-              <label className="login-label" htmlFor="confirmPassword">CONFIRMAR CONTRASEÑA</label>
-              <div className="login-input-wrap">
-                <input
-                  id="confirmPassword"
-                  className="login-input"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  autoComplete="new-password"
-                  required
-                  placeholder="••••••••"
-                />
-                <span className="login-input-line" />
-              </div>
+          {!isRecovery && (
+            <div className="login-tabs" role="tablist">
+              <button className={mode === 'login' ? 'active' : ''} type="button" onClick={() => changeMode('login')}>Iniciar sesión</button>
+              <button className={mode === 'register' ? 'active' : ''} type="button" onClick={() => changeMode('register')}>Registrarse</button>
             </div>
           )}
 
-          {error && (
-            <div className="login-error">
-              <span className="login-error-dot" />
-              {error}
+          {isRecovery && (
+            <div className="recovery-heading">
+              <button type="button" onClick={() => changeMode('login')} aria-label="Volver">←</button>
+              <div><h3>{mode === 'forgot' ? 'Recuperar acceso' : 'Verifica tu correo'}</h3><p>{mode === 'forgot' ? 'Te enviaremos un código de seguridad.' : `Código enviado a ${email}`}</p></div>
             </div>
           )}
 
-          {success && (
-            <div style={{ color: '#00e5ff', fontSize: 13, marginBottom: 12, letterSpacing: '0.05em' }}>
-              ✓ {success}
-            </div>
-          )}
-
-          {mode === 'login' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-              <input
-                id="remember"
-                type="checkbox"
-                checked={remember}
-                onChange={e => setRemember(e.target.checked)}
-                style={{ accentColor: '#00e5ff', width: 16, height: 16, cursor: 'pointer' }}
-              />
-              <label
-                htmlFor="remember"
-                style={{ color: '#556', fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer' }}
-              >
-                GUARDAR SESIÓN EN ESTE DISPOSITIVO
+          <form className="login-form" onSubmit={handleSubmit}>
+            {mode !== 'verify' && (
+              <label className="login-field">Correo electrónico
+                <input className="login-input" type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" required placeholder="nombre@correo.com" />
               </label>
-            </div>
-          )}
+            )}
 
-          <button className="login-btn" type="submit" disabled={loading}>
-            {loading ? (
-              <span className="login-spinner" />
-            ) : (
+            {(mode === 'login' || mode === 'register') && (
+              <label className="login-field">Contraseña
+                <input className="login-input" type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required placeholder="Mínimo 8 caracteres" />
+              </label>
+            )}
+
+            {mode === 'verify' && (
               <>
-                <span>{mode === 'login' ? 'ACCEDER' : 'CREAR CUENTA'}</span>
-                <svg viewBox="0 0 20 20" fill="none">
-                  <path d="M4 10h12M12 6l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <label className="login-field">Código de verificación
+                  <input className="login-input code-input" inputMode="numeric" maxLength={6} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} required placeholder="000000" />
+                </label>
+                <label className="login-field">Nueva contraseña
+                  <input className="login-input" type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Mínimo 8 caracteres" />
+                </label>
               </>
             )}
-          </button>
-        </form>
 
-        <p className="login-footer">
-          Acceso restringido · Solo personal autorizado
-        </p>
-      </div>
-    </div>
+            {(mode === 'register' || mode === 'verify') && (
+              <label className="login-field">Confirmar contraseña
+                <input className="login-input" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required placeholder="Repite tu contraseña" />
+              </label>
+            )}
+
+            {mode === 'login' && (
+              <div className="login-options">
+                <label><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} /> Recordarme</label>
+                <button type="button" onClick={() => changeMode('forgot')}>¿Olvidaste tu contraseña?</button>
+              </div>
+            )}
+
+            {error && <div className="login-message error">{error}</div>}
+            {success && <div className="login-message success">{success}</div>}
+
+            <button className="login-btn" type="submit" disabled={loading}>
+              {loading ? <span className="login-spinner" /> : <><span>{mode === 'login' ? 'Acceder' : mode === 'register' ? 'Crear cuenta' : mode === 'forgot' ? 'Solicitar código' : 'Cambiar contraseña'}</span><b>→</b></>}
+            </button>
+          </form>
+
+          <footer className="login-footer"><span /> Conexión cifrada y acceso restringido</footer>
+        </div>
+      </section>
+    </main>
   );
 }
