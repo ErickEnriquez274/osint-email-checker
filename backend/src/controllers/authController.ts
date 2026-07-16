@@ -4,8 +4,12 @@ import { registerUser, loginUser } from "../services/authService";
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const register = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, password, username } = req.body;
 
+  if (!username || username.trim().length < 3) {
+    res.status(400).json({ error: "El nombre de usuario debe tener al menos 3 caracteres" });
+    return;
+  }
   if (!email || !emailRegex.test(email)) {
     res.status(400).json({ error: "Correo inválido" });
     return;
@@ -16,7 +20,7 @@ export const register = async (req: Request, res: Response) => {
   }
 
   try {
-    const result = await registerUser(email, password);
+    const result = await registerUser(email, password, username);
     res.status(201).json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });

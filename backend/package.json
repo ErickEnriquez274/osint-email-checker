@@ -21,6 +21,7 @@
     "express-rate-limit": "^8.5.2",
     "jsonwebtoken": "^9.0.3",
     "libphonenumber-js": "^1.13.5",
+    "mysql2": "^3.23.0",
     "serpapi": "^2.2.1",
     "uuid": "^14.0.0"
   },
