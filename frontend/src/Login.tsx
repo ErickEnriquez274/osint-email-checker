@@ -12,6 +12,7 @@ export default function Login() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [code, setCode] = useState('');
   const [remember, setRemember] = useState(false);
+  const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,8 +27,8 @@ export default function Login() {
     setPassword('');
     setConfirmPassword('');
     setCode('');
+    setUsername('');  // <- agrega esto
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearMessages();
@@ -65,7 +66,7 @@ export default function Login() {
       const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, ...(mode === 'register' && { username }) }),
       });
       const data = await res.json();
       if (!res.ok) return setError(data.error || 'Ocurrió un error.');
@@ -150,7 +151,11 @@ export default function Login() {
                 <input className="login-input" type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" required placeholder="nombre@correo.com" />
               </label>
             )}
-
+            {mode === 'register' && (
+  <label className="login-field">Nombre de usuario
+    <input className="login-input" type="text" value={username} onChange={e => setUsername(e.target.value)} required placeholder="Tu nombre de usuario" minLength={3} />
+  </label>
+)}
             {(mode === 'login' || mode === 'register') && (
               <label className="login-field">Contraseña
                 <input className="login-input" type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required placeholder="Mínimo 8 caracteres" />
