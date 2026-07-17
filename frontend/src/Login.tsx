@@ -33,16 +33,24 @@ export default function Login() {
     e.preventDefault();
     clearMessages();
 
-    if (mode === 'forgot') {
-      setLoading(true);
-      window.setTimeout(() => {
-        setLoading(false);
-        setMode('verify');
-        setSuccess('Solicitud preparada. El envío real se activará al conectar el servicio de correo.');
-      }, 650);
-      return;
-    }
-
+if (mode === 'forgot') {
+  setLoading(true);
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/password/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok) return setError(data.error || 'Ocurrió un error.');
+    setSuccess('Si el correo existe recibirás un enlace en breve.');
+  } catch {
+    setError('No se pudo conectar con el servidor.');
+  } finally {
+    setLoading(false);
+  }
+  return;
+}
     if (mode === 'verify') {
       if (code.length !== 6) return setError('Ingresa el código de 6 dígitos.');
       if (password.length < 8) return setError('La contraseña debe tener al menos 8 caracteres.');
