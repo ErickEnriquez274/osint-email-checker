@@ -5,6 +5,7 @@ import checkRoute from "./routes/checkRoute";
 import phoneRoute from "./routes/phoneRoute";
 import authRoute from "./routes/authRoute";
 import dorkRoute from "./routes/dorkRoute";
+import passwordResetRoute from "./routes/passwordResetRoute";
 
 
 const app = express();
@@ -18,5 +19,6 @@ app.use("/api/auth", authRoute);
 app.use("/api/check", limiter, checkRoute);
 app.use("/api/phone", limiter, phoneRoute);
 app.use("/api/dork", limiter, dorkRoute);
+app.use("/api/password", passwordResetRoute);
 
 export default app;  // <- siempre al final
